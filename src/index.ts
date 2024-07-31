@@ -37,6 +37,7 @@ const LinearRegression = ZkProgram({
   // 증명 생성
   const proof = await LinearRegression.predict(input);
   console.log('proof created');
+  // console.log('proof:', proof.proof);
 
   // 증명 검증 함수
   const verifyProof = async (proof: any, verificationKey: any) => {
