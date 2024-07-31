@@ -11,4 +11,4 @@ npm run start
 
 ## Result
 
-<img url="https://github.com/user-attachments/assets/69017a71-4081-4a40-b793-c915cba8e9c4"/>
+<img src="https://github.com/user-attachments/assets/69017a71-4081-4a40-b793-c915cba8e9c4"/>
