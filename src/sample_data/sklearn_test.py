@@ -15,7 +15,7 @@ model = LinearRegression()
 model.fit(X, y)
 
 # '70'를 입력으로 받아 예측
-input_value = np.array([[70]])
+input_value = np.array([[25]])
 prediction = model.predict(input_value)
 
 print(f"Input: {input_value[0][0]}, Predicted Target: {prediction[0]}")

@@ -23,32 +23,25 @@ const LinearRegression = ZkProgram({
         const X = globalData.map(d => [d[0], Int64.from(1)]); // feature와 상수항 추가
         const y = globalData.map(d => d[1]); // target
 
-        // Xt와 Xty 계산
+        // 행렬 연산
         const Xt = transposeMatrix(X);
+        const XtX = matrixMultiply(Xt, X);
         const Xty = Xt.map(row => row.reduce((acc, val, i) => acc.add(val.mul(y[i])), Int64.from(0)));
 
-        // LU 분해 또는 가우스 소거법 등을 사용하여 정수 연산 기반 계수 추정
-        // 여기서는 단순 예제를 위해서 OLS 공식 사용을 가정하고 정수 비율 유지
-        // 아래 코드는 실제 정수 계산으로 작성되어야 함 (예: 교차검증에서 사용)
+        // 가우스 소거법으로 회귀 계수 계산
+        const coefficients = gaussElimination(XtX, Xty);
 
-        // XtX와 XtX_inv를 사용하지 않고 직접적으로 해결
-        let beta0 = Int64.from(0); // 절편
-        let beta1 = Int64.from(0); // 기울기
-
-        // 예제: 직접적으로 회귀 계수를 계산하지 않고, 정수 계산 예시
-        const n = Int64.from(globalData.length);
-        const sumX = globalData.reduce((acc, d) => acc.add(d[0]), Int64.from(0));
-        const sumY = y.reduce((acc, d) => acc.add(d), Int64.from(0));
-        const sumXY = globalData.reduce((acc, d) => acc.add(d[0].mul(d[1])), Int64.from(0));
-        const sumXX = globalData.reduce((acc, d) => acc.add(d[0].mul(d[0])), Int64.from(0));
-
-        beta1 = (n.mul(sumXY).sub(sumX.mul(sumY))).div(n.mul(sumXX).sub(sumX.mul(sumX)));
-        beta0 = (sumY.sub(beta1.mul(sumX))).div(n);
 
         // 예측 수행
-        let prediction = beta0.add(beta1.mul(input[0]));
+        let dotProduct = Int64.from(0);
+        for (let i = 0; i < coefficients.length - 1; i++) {
+          dotProduct = dotProduct.add(coefficients[i].mul(input[i]));
+        }
 
-        return prediction;
+        const intercept = coefficients[coefficients.length - 1];
+        const z = dotProduct.add(intercept);
+
+        return z;
       },
     },
   },
@@ -68,6 +61,70 @@ function transposeMatrix(A: Int64[][]): Int64[][] {
   return T;
 }
 
+// 행렬 곱셈 함수
+function matrixMultiply(A: Int64[][], B: Int64[][]): Int64[][] {
+  const rowsA = A.length;
+  const colsA = A[0].length;
+  const colsB = B[0].length;
+  let C = Array(rowsA).fill(null).map(() => Array(colsB).fill(Int64.from(0)));
+
+  for (let i = 0; i < rowsA; i++) {
+    for (let j = 0; j < colsB; j++) {
+      for (let k = 0; k < colsA; k++) {
+        C[i][j] = C[i][j].add(A[i][k].mul(B[k][j]));
+      }
+    }
+  }
+  return C;
+}
+
+// 가우스 소거법을 사용하여 선형 시스템을 해결하는 함수
+function gaussElimination(A: Int64[][], b: Int64[]): Int64[] {
+  const n = A.length;
+  let augmentedMatrix: Int64[][] = A.map((row, i) => [...row, b[i]]);
+
+  // Forward elimination
+  for (let i = 0; i < n; i++) {
+    // Pivot: 절대값이 가장 큰 요소를 찾습니다.
+    let maxRow = i;
+    for (let k = i + 1; k < n; k++) {
+      // 절대값을 비교하기 위해 음수인지 양수인지 판단
+      const currentAbs = augmentedMatrix[k][i] > Int64.from(0)
+        ? augmentedMatrix[k][i]
+        : augmentedMatrix[k][i].negV2();
+      const maxAbs = augmentedMatrix[maxRow][i] > Int64.from(0)
+        ? augmentedMatrix[maxRow][i]
+        : augmentedMatrix[maxRow][i].negV2();
+
+      if (currentAbs > maxAbs) {
+        maxRow = k;
+      }
+    }
+
+    // Swap maximum row with current row
+    [augmentedMatrix[i], augmentedMatrix[maxRow]] = [augmentedMatrix[maxRow], augmentedMatrix[i]];
+
+    // Make all rows below this one 0 in current column
+    for (let k = i + 1; k < n; k++) {
+      const factor = augmentedMatrix[k][i].div(augmentedMatrix[i][i]);
+      for (let j = i; j <= n; j++) {
+        augmentedMatrix[k][j] = augmentedMatrix[k][j].sub(factor.mul(augmentedMatrix[i][j]));
+      }
+    }
+  }
+
+  // Solve equation Ax = b for an upper triangular matrix A
+  let x = Array(n).fill(Int64.from(0));
+  for (let i = n - 1; i >= 0; i--) {
+    let sum = Int64.from(0);
+    for (let j = i + 1; j < n; j++) {
+      sum = sum.add(augmentedMatrix[i][j].mul(x[j]));
+    }
+    x[i] = (augmentedMatrix[i][n].sub(sum)).div(augmentedMatrix[i][i]);
+  }
+  return x;
+}
+
 (async () => {
   console.log("start");
 
@@ -75,7 +132,7 @@ function transposeMatrix(A: Int64[][]): Int64[][] {
   await loadData('data.json');
 
   // 입력 데이터
-  let input = [Int64.from(70)];
+  let input = [Int64.from(25)];
 
   // 증명 키 컴파일
   const { verificationKey } = await LinearRegression.compile();
