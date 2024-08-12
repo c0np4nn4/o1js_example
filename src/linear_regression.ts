@@ -10,11 +10,7 @@ const LinearRegression = ZkProgram({
       privateInputs: [Provable.Array(Int64, 1)],
       async method(input: Int64[]): Promise<Int64> {
 
-        // 가우스 소거법으로 회귀 계수 계산
-        // function gaussElimination(A: Int64[][], b: Int64[]): Int64[]
-        // const coefficients = gaussElimination(XtX, Xty);
         const coefficients: Int64[] = [Int64.from(2), Int64.from(4)];
-
 
         // 예측 수행
         let dotProduct = Int64.from(0);
