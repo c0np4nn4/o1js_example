@@ -89,13 +89,14 @@ To benchmark the performance of the Linear Regression and MLP implementations, y
 ## Result
 
 ```bash
-# o1js
-> o1js_example@1.0.0 start
-> node dist/index.js
+# mlp
+> gtime node dist/mlp.js                                                                                                                                                                                ─╯
 
 start
 making proof
 proof created
-value:  525
+value:  2615
 Proof is valid: true
+125.44user 3.57system 0:26.43elapsed 488%CPU (0avgtext+0avgdata 823888maxresident)k
+0inputs+0outputs (0major+70840minor)pagefaults 0swaps
 ```
