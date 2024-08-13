@@ -12,6 +12,12 @@ function linearLayer(input: Int64[], weights: Int64[], bias: Int64): Int64 {
   return z;
 }
 
+// 퍼셉트론 레이어를 처리하는 함수
+function perceptron(input: Int64[], weights: Int64[], bias: Int64): Int64 {
+  const z = linearLayer(input, weights, bias);
+  return relu(z); // ReLU 활성화 함수 적용
+}
+
 // MLP 모델 정의
 const MLP = ZkProgram({
   name: 'MLP',
@@ -24,14 +30,12 @@ const MLP = ZkProgram({
         // 첫 번째 히든 레이어
         const weights1: Int64[] = [Int64.from(2), Int64.from(4), Int64.from(3), Int64.from(1), Int64.from(5)];
         const bias1: Int64 = Int64.from(3);
-        const z1 = linearLayer(input, weights1, bias1);
-        const a1 = relu(z1);
+        const a1 = perceptron(input, weights1, bias1);
 
         // 두 번째 히든 레이어
         const weights2: Int64[] = [Int64.from(3), Int64.from(1), Int64.from(4), Int64.from(2), Int64.from(6)];
         const bias2: Int64 = Int64.from(2);
-        const z2 = linearLayer([a1, a1, a1, a1, a1], weights2, bias2); // 각 z1 값을 복제해서 전달
-        const a2 = relu(z2);
+        const a2 = perceptron([a1, a1, a1, a1, a1], weights2, bias2); // 각 z1 값을 복제해서 전달
 
         // 출력 레이어
         const weights3: Int64[] = [Int64.from(1)]; // 활성화 함수 출력값 하나에 대한 가중치
